@@ -83,8 +83,13 @@ Sections:
       };
     }
 
-    const blueprint = data.content?.map(b => b.text || "").join("") || "";
-
+    let blueprint = "";
+if (data.content && Array.isArray(data.content)) {
+  blueprint = data.content.map(b => b.text || "").join("");
+}
+if (!blueprint) {
+  blueprint = JSON.stringify(data);
+}
     return {
       statusCode: 200,
       headers,
