@@ -62,7 +62,7 @@ exports.handler = async function(event, context) {
       };
     }
 
-    const blueprint = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : "No content returned";
+    const blueprint = (data.content && data.content[0] && data.content[0].text) ? data.content[0].text : "DEBUG: " + JSON.stringify(data).substring(0, 500);
 
     return {
       statusCode: 200,
