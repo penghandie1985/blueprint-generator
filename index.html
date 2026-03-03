@@ -425,7 +425,7 @@
         }
 
         currentBlueprint = data.blueprint;
-        const wordCount = currentBlueprint.split(/\s+/).filter(Boolean).length;
+        const wordCount = currentBlueprint ? currentBlueprint.split(/\s+/).filter(Boolean).length : 0;
 
         document.getElementById('result-title').textContent = firstName + "'s Retirement Relocation Blueprint";
         document.getElementById('result-meta').textContent = wordCount.toLocaleString() + ' words generated';
