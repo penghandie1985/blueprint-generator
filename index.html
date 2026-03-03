@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Retirement Blueprint Generator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Inter', system-ui, sans-serif;
+      padding: 20px 16px 40px;
+    }
+
+    .header {
+      text-align: center;
+      padding: 24px 16px 32px;
+      color: white;
+    }
+    .header .emoji { font-size: 48px; margin-bottom: 12px; }
+    .header .eyebrow {
+      font-size: 11px; letter-spacing: 3px; color: #f7b733;
+      font-weight: 600; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .header h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(24px, 5vw, 36px);
+      font-weight: 900; line-height: 1.2; margin-bottom: 10px;
+    }
+    .header p {
+      font-size: 15px; color: rgba(255,255,255,0.7);
+      line-height: 1.6; max-width: 480px; margin: 0 auto;
+    }
+
+    .card {
+      background: white; border-radius: 18px;
+      padding: 24px 20px; margin: 0 auto 20px;
+      max-width: 680px; box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; color: #1a2a3a; font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .card-sub {
+      font-size: 13px; color: #777; margin-bottom: 20px; line-height: 1.5;
+    }
+
+    label {
+      display: block; font-size: 12px; font-weight: 700;
+      color: #444; text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 5px; margin-top: 14px;
+    }
+    label:first-of-type { margin-top: 0; }
+
+    input, select {
+      width: 100%; padding: 13px 14px;
+      border: 2px solid #e0e0e0; border-radius: 10px;
+      font-size: 15px; font-family: 'Inter', sans-serif;
+      outline: none; transition: border-color 0.2s;
+      background: white; color: #1a2a3a;
+      -webkit-appearance: none; appearance: none;
+    }
+    input:focus, select:focus { border-color: #2c5364; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media(max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+
+    .btn {
+      width: 100%; padding: 16px; margin-top: 20px;
+      border: none; border-radius: 12px; font-size: 16px;
+      font-weight: 700; font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2c5364, #0f2027);
+      color: white;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(44,83,100,0.4); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-copy {
+      background: #f0f7fa; border: 2px solid #2c5364;
+      color: #2c5364; padding: 12px 20px; width: auto;
+      margin-top: 0; flex: 1;
+    }
+    .btn-copy.success { background: #27ae60; border-color: #27ae60; color: white; }
+    .btn-reset {
+      background: white; border: 2px solid #ddd;
+      color: #888; padding: 12px 20px; width: auto;
+      margin-top: 0; flex: 1;
+    }
+
+    .error {
+      background: #fff0f0; border: 1px solid #ffaaaa;
+      border-radius: 10px; padding: 13px 16px;
+      color: #c0392b; font-size: 13px; line-height: 1.6;
+      margin-top: 12px;
+    }
+
+    .badge {
+      display: inline-block; background: #e8f4f8; color: #2c5364;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; margin-bottom: 10px;
+    }
+    .badge.green { background: #e8f8e8; color: #27ae60; }
+
+    /* Loading */
+    .loading-wrap { text-align: center; padding: 40px 20px; }
+    .spinner {
+      width: 52px; height: 52px;
+      border: 4px solid #e0e0e0; border-top-color: #2c5364;
+      border-radius: 50%; animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-wrap h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; color: #1a2a3a; margin-bottom: 8px;
+    }
+    .loading-wrap p { font-size: 14px; color: #666; line-height: 1.6; }
+    .loading-steps { margin-top: 20px; }
+    .loading-step {
+      font-size: 13px; color: #888; padding: 5px 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:.5} 50%{opacity:1} }
+
+    /* Blueprint output */
+    .blueprint-actions {
+      display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .blueprint-meta {
+      font-size: 12px; color: #999; margin-bottom: 12px;
+    }
+    .blueprint-content {
+      background: #f8fafb; border-radius: 12px;
+      padding: 20px 16px; border: 1px solid #e0e8ee;
+      max-height: 520px; overflow-y: auto;
+    }
+    .blueprint-text {
+      white-space: pre-wrap; font-size: 14px;
+      line-height: 1.9; color: #2c3e50;
+      font-family: 'Inter', sans-serif;
+    }
+    .disclaimer {
+      font-size: 11px; color: #aaa; line-height: 1.6;
+      margin-top: 16px; padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    /* Screens */
+    .screen { display: none; }
+    .screen.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="emoji">🗺️</div>
+    <div class="eyebrow">AI-Powered Tool</div>
+    <h1>Retirement Blueprint Generator</h1>
+    <p>Generate a personalized retirement relocation blueprint in about 30 seconds.</p>
+  </div>
+
+  <!-- SCREEN 1: FORM -->
+  <div id="screen-form" class="screen active">
+    <div class="card">
+      <div class="card-title">Client Profile</div>
+      <div class="card-sub">Fill in the details below and click Generate.</div>
+
+      <div id="form-error" class="error" style="display:none"></div>
+
+      <label>Client First Name *</label>
+      <input type="text" id="firstName" placeholder="e.g. Michael" autocomplete="off"/>
+
+      <div class="grid">
+        <div>
+          <label>Current Location</label>
+          <select id="location">
+            <option>New York City / Long Island</option>
+            <option>New Jersey</option>
+            <option>Connecticut</option>
+            <option>Massachusetts</option>
+            <option>Other Northeast</option>
+          </select>
+        </div>
+        <div>
+          <label>Age Bracket</label>
+          <select id="age">
+            <option>52–55</option>
+            <option>56–59</option>
+            <option selected>60–63</option>
+            <option>64–67</option>
+            <option>68+</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Retirement Timeline</label>
+          <select id="timeline">
+            <option>Within 1 year</option>
+            <option selected>1–2 years</option>
+            <option>3–5 years</option>
+            <option>Just exploring</option>
+          </select>
+        </div>
+        <div>
+          <label>Home Ownership</label>
+          <select id="homeOwner">
+            <option>Yes — plan to sell</option>
+            <option>Yes — will keep it</option>
+            <option>No, I rent</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Home Value</label>
+          <select id="homeValue">
+            <option>Under $300K</option>
+            <option>$300K–$600K</option>
+            <option selected>$600K–$1M</option>
+            <option>Over $1M</option>
+            <option>N/A — I rent</option>
+          </select>
+        </div>
+        <div>
+          <label>Household Income</label>
+          <select id="income">
+            <option>Under $60K/yr</option>
+            <option>$60K–$100K/yr</option>
+            <option selected>$100K–$150K/yr</option>
+            <option>Over $150K/yr</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Savings Confidence</label>
+          <select id="savings">
+            <option>Worried — not enough</option>
+            <option selected>Not sure if enough</option>
+            <option>On track</option>
+            <option>In good shape</option>
+          </select>
+        </div>
+        <div>
+          <label>Top Priority</label>
+          <select id="priority">
+            <option selected>Low cost of living</option>
+            <option>Warm weather</option>
+            <option>Low taxes</option>
+            <option>Near family</option>
+            <option>Good healthcare</option>
+            <option>Outdoor lifestyle</option>
+            <option>Social scene</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Biggest Concern</label>
+          <select id="concern">
+            <option selected>Running out of money</option>
+            <option>Far from family</option>
+            <option>Not knowing anyone</option>
+            <option>Healthcare quality</option>
+            <option>Making wrong choice</option>
+          </select>
+        </div>
+        <div>
+          <label>Destination Interest</label>
+          <select id="destination">
+            <option selected>Florida</option>
+            <option>The Carolinas</option>
+            <option>Tennessee</option>
+            <option>Texas</option>
+            <option>Arizona</option>
+            <option>Delaware</option>
+            <option>Not sure — recommend best</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label>Lifestyle Preference</label>
+          <select id="lifestyle">
+            <option selected>Warm beach / coastal</option>
+            <option>Four seasons but milder</option>
+            <option>Suburban near city</option>
+            <option>Small-town / rural</option>
+          </select>
+        </div>
+        <div>
+          <label>Proximity to Northeast</label>
+          <select id="proximity">
+            <option>Very important</option>
+            <option selected>Somewhat — short flight ok</option>
+            <option>Not important</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Open to Renting First?</label>
+      <select id="rentFirst">
+        <option selected>Yes — great idea</option>
+        <option>No, want to buy</option>
+        <option>Not sure</option>
+      </select>
+
+      <button class="btn btn-primary" onclick="generateBlueprint()">
+        ✨ Generate Blueprint
+      </button>
+      <p style="font-size:11px;color:#aaa;text-align:center;margin-top:10px">
+        Takes ~30 seconds · Costs ~$0.05 in API credits
+      </p>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: LOADING -->
+  <div id="screen-loading" class="screen">
+    <div class="card">
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <h2>Building the Blueprint...</h2>
+        <p>Claude is researching destinations, comparing costs, and writing your personalized report.</p>
+        <div class="loading-steps">
+          <div class="loading-step">🔍 Researching destinations...</div>
+          <div class="loading-step">💰 Comparing costs & taxes...</div>
+          <div class="loading-step">📋 Building action plan...</div>
+          <div class="loading-step">✍️ Writing your blueprint...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: RESULT -->
+  <div id="screen-result" class="screen">
+    <div class="card">
+      <span class="badge green">✓ Blueprint Ready</span>
+      <div class="card-title" id="result-title">Blueprint</div>
+      <div class="blueprint-meta" id="result-meta"></div>
+      <div class="blueprint-actions">
+        <button class="btn btn-copy" id="copy-btn" onclick="copyBlueprint()">📋 Copy All</button>
+        <button class="btn btn-reset" onclick="resetForm()">New Blueprint</button>
+      </div>
+      <div class="blueprint-content">
+        <pre class="blueprint-text" id="blueprint-output"></pre>
+      </div>
+      <p class="disclaimer">
+        <strong>Educational Disclaimer:</strong> This blueprint is for general educational and informational purposes only using publicly available data. It does not constitute personalized financial, investment, tax, legal, or retirement planning advice. All figures are general illustrations. Always consult a licensed financial planner, CPA, real estate attorney, and other qualified professionals before making major financial decisions. This platform is not a registered investment adviser.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    let currentBlueprint = "";
+
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + id).classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    function getVal(id) {
+      return document.getElementById(id).value;
+    }
+
+    async function generateBlueprint() {
+      const firstName = getVal('firstName').trim();
+      const errEl = document.getElementById('form-error');
+
+      if (!firstName) {
+        errEl.textContent = 'Please enter a first name.';
+        errEl.style.display = 'block';
+        return;
+      }
+      errEl.style.display = 'none';
+
+      const profile = {
+        firstName,
+        location:   getVal('location'),
+        age:        getVal('age'),
+        timeline:   getVal('timeline'),
+        homeOwner:  getVal('homeOwner'),
+        homeValue:  getVal('homeValue'),
+        income:     getVal('income'),
+        savings:    getVal('savings'),
+        priority:   getVal('priority'),
+        concern:    getVal('concern'),
+        destination:getVal('destination'),
+        lifestyle:  getVal('lifestyle'),
+        proximity:  getVal('proximity'),
+        rentFirst:  getVal('rentFirst')
+      };
+
+      showScreen('loading');
+
+      try {
+        // Calls the Netlify function — no CORS issues
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          showScreen('form');
+          errEl.textContent = '❌ ' + data.error;
+          errEl.style.display = 'block';
+          return;
+        }
+
+        currentBlueprint = data.blueprint;
+        const wordCount = currentBlueprint.split(/\s+/).filter(Boolean).length;
+
+        document.getElementById('result-title').textContent = firstName + "'s Retirement Relocation Blueprint";
+        document.getElementById('result-meta').textContent = wordCount.toLocaleString() + ' words generated';
+        document.getElementById('blueprint-output').textContent = currentBlueprint;
+
+        showScreen('result');
+
+      } catch(err) {
+        showScreen('form');
+        errEl.textContent = '❌ Error: ' + err.message + '. Make sure the app is deployed to Netlify.';
+        errEl.style.display = 'block';
+      }
+    }
+
+    function copyBlueprint() {
+      navigator.clipboard.writeText(currentBlueprint).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = '✓ Copied!';
+        btn.classList.add('success');
+        setTimeout(() => {
+          btn.textContent = '📋 Copy All';
+          btn.classList.remove('success');
+        }, 2500);
+      });
+    }
+
+    function resetForm() {
+      currentBlueprint = "";
+      document.getElementById('firstName').value = "";
+      document.getElementById('form-error').style.display = 'none';
+      showScreen('form');
+    }
+  </script>
+
+</body>
+</html>
